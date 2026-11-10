@@ -72,8 +72,22 @@ char TileAt(int tx, int ty)
     return map[ty][tx];
 }
 
+// Crates are solid too: Jack can stand on them, and robots and their shots
+// can't get through. This grid says which squares have a crate in them
+// (the number of the crate in actors[], plus 1, or 0 for none).
+static short crateAt[MAX_H][MAX_W];
+
+int CrateAt(int tx, int ty)
+{
+    if (tx < 0 || ty < 0 || tx >= MAX_W || ty >= MAX_H)
+        return 0;
+    return crateAt[ty][tx];
+}
+
 BOOL Solid(int tx, int ty)
 {
+    if (CrateAt(tx, ty))
+        return TRUE;
     char c = TileAt(tx, ty);
     return c == '#' || c == '=' || c == '%' || c == 'R' || c == 'G' || c == 'B' || c == 'Y';
 }
@@ -310,6 +324,7 @@ void StartLevel(int n)
     memset(shots, 0, sizeof shots);
     memset(bits, 0, sizeof bits);
     memset(keysHeld, 0, sizeof keysHeld);
+    memset(crateAt, 0, sizeof crateAt);
     heroX = heroY = TILE;
 
     for (int ty = 0; ty < lv->h; ty++)
@@ -330,7 +345,11 @@ void StartLevel(int n)
             {
                 Actor *a = NewActor(kind, tx, ty);
                 if (a)
+                {
                     a->inside = inside;
+                    if (kind == A_CRATE)
+                        crateAt[ty][tx] = (short)(a - actors + 1);
+                }
                 map[ty][tx] = '.';
             }
         }
@@ -571,8 +590,9 @@ static void Destroy(Actor *a)
     a->kind = A_NONE;
 }
 
-static void OpenCrate(Actor *a)
+void OpenCrate(Actor *a)
 {
+    crateAt[(int)(a->y / TILE)][(int)(a->x / TILE)] = 0;    // no longer in the way
     float cx = a->x + a->w / 2, bottom = a->y + a->h;
     Spark(cx, a->y + 16, palette[4], 14, 2.5f);
     Spark(cx, a->y + 16, palette[9], 6, 2);
@@ -786,7 +806,14 @@ static void UpdateShots(void)
         int tx = (int)floorf((s->x + s->w / 2) / TILE), ty = (int)floorf((s->y + s->h / 2) / TILE);
         if (Solid(tx, ty))
         {
-            if (!s->enemy && TileAt(tx, ty) == '%')
+            if (CrateAt(tx, ty))                 // a crate: Jack's shots open it
+            {
+                if (!s->enemy)
+                    OpenCrate(&actors[CrateAt(tx, ty) - 1]);
+                else
+                    Spark(s->x + s->w / 2, s->y + s->h / 2, palette[8], 4, 1.5f);
+            }
+            else if (!s->enemy && TileAt(tx, ty) == '%')
             {
                 // The whole stack of cracked blocks falls, so a wall two
                 // blocks high can be shot through

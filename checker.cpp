@@ -7,7 +7,8 @@
 //  turn, until there's nowhere new. Then:
 //    - keys he can reach open their doors, and the spring boots let him jump
 //      higher, so it looks again;
-//    - cracked blocks and crates he can shoot count as open, so it looks again;
+//    - cracked blocks and crates he can shoot are opened (crates are solid
+//      until then, and what's inside must still be reached), so it looks again;
 //    - a boss he can shoot drops the yellow key.
 //  Robots are left out: Jack can always shoot them. Spikes aren't: a route
 //  that touches them doesn't count.
@@ -201,8 +202,6 @@ void CheckLevel(int n)
     Place start = { (short)(heroX + 0.5f), (short)(heroY + 0.5f) };
 
     BOOL have[4] = { FALSE, FALSE, FALSE, FALSE };
-    unsigned char shot[MAX_ACTORS];
-    memset(shot, 0, sizeof shot);
     hasBoots = FALSE;
 
     memset(seen, 0, sizeof seen);
@@ -218,8 +217,13 @@ void CheckLevel(int n)
         for (int i = 0; i < numActors; i++)
         {
             Actor *a = &actors[i];
-            if (a->kind == A_CRATE && !shot[i] && CanShootFromAnywhere(a->x, a->y, a->w, a->h))
-                shot[i] = 1;
+            if (a->kind == A_CRATE && CanShootFromAnywhere(a->x, a->y, a->w, a->h))
+            {
+                // Shot open: it's out of the way, and what was inside can be picked up
+                Changed((int)(a->x / TILE), (int)(a->y / TILE));
+                OpenCrate(a);
+                changed = TRUE;
+            }
             if (a->kind == A_BOSS && !have[3] && CanShootFromAnywhere(a->x, a->y, a->w, a->h))
             {
                 have[3] = TRUE;         // beaten: he drops the yellow key
@@ -284,7 +288,7 @@ void CheckLevel(int n)
         const Actor *a = &actors[i];
         if (a->kind == A_NONE || (a->kind >= A_WALKER && a->kind <= A_BOSS))
             continue;
-        BOOL got = touched[i] || (a->kind == A_CRATE && shot[i]);
+        BOOL got = touched[i];
         if (a->kind == A_EXIT)
         {
             anyExit = TRUE;

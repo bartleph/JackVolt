@@ -64,6 +64,9 @@ Other MinGW-w64 compilers work too, e.g.
 On a gamepad: the stick or d-pad moves, A jumps, X or B fires, Y pauses,
 Start starts.
 
+Crates are solid: stand on them to get out of a robot's way, or hide behind
+them - robot shots can't get through. Shoot them open to see what's inside.
+
 You have eight bars of health; robots, their shots and spikes each take one.
 Lose them all and you start the level again with the score you had when it
 began - there are no lives to run out of.

@@ -134,6 +134,8 @@ BOOL  Solid(int tx, int ty);
 char  TileAt(int tx, int ty);
 void  MoveHero(void);
 void  OpenDoors(char door);
+int   CrateAt(int tx, int ty);
+void  OpenCrate(Actor *a);
 
 // ---- draw.cpp
 void  MakeFonts(void);
