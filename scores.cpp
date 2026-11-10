@@ -74,3 +74,16 @@ void AddScore(int s, const char *name)
     Insert(s, name);
     SaveScores();
 }
+
+// Change the name on a score already in the table (the browser version puts
+// a score in first and asks for the name afterwards)
+void RenameScore(int s, const char *from, const char *to)
+{
+    for (int i = 0; i < NUM_SCORES; i++)
+        if (scores[i].score == s && lstrcmpi(scores[i].name, from) == 0)
+        {
+            lstrcpyn(scores[i].name, (to && to[0]) ? to : "Anon", sizeof scores[i].name);
+            SaveScores();
+            return;
+        }
+}

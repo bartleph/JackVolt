@@ -195,7 +195,9 @@ void LoadLevels(void)
     char *text = ReadTextFile(path);
     if (text == NULL)
     {
+#ifndef __wasm__
         WriteTextFile(path, defaultLevels);     // first run: make the file
+#endif
         numLevels = ParseLevels(defaultLevels);
         return;
     }

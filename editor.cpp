@@ -274,8 +274,21 @@ static void DeleteLevel(void)
     EnterEditor(n < numLevels ? n : numLevels - 1);
 }
 
+void SetLevelName(const char *name)
+{
+    if (name[0])
+    {
+        lstrcpyn(lv->name, name, sizeof lv->name);
+        editModified = TRUE;
+    }
+}
+
 static void Rename(void)
 {
+#ifdef __wasm__
+    WebAskText(2, 0, "Level name:", lv->name);  // the page calls SetLevelName
+    return;
+#endif
     char buf[40];
     lstrcpy(buf, lv->name);
     if (InputBox(hwndMain, "Rename level", "Level name:", buf, sizeof buf) && buf[0])

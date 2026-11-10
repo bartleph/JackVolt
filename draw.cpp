@@ -542,7 +542,9 @@ static void DrawTitle(void)
     GfxCentre(fontSmall, 220, "Ctrl / X: fire     Up: go through the exit", RGB(200, 200, 220));
     GfxCentre(fontSmall, 240, "P: pause   S: sound   M: music   F11: full screen", RGB(200, 200, 220));
     GfxCentre(fontSmall, 260, "H: high scores  E: level editor  C: character designer", RGB(200, 200, 220));
+#ifndef __wasm__
     GfxCentre(fontSmall, 280, "Esc: quit", RGB(200, 200, 220));
+#endif
     GfxCentre(fontSmall, 345, "Shoot crates open. Find the coloured keys. Reach the exit.", RGB(150, 150, 180));
     GfxCentre(fontSmall, 368, "Gamepad: A jump, X or B fire, Y pause, Start play", RGB(110, 110, 140));
 }

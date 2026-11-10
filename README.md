@@ -10,6 +10,19 @@ and reach the exit - then deal with the professor himself.
 
 ![Four levels](docs/levels.png)
 
+## Play in your browser
+
+There's also a browser version, made from the same code compiled to
+WebAssembly. It runs on a PC, a Mac, a phone or a tablet, with touch buttons
+on a phone and gamepad support, and it includes the level editor and the
+character designer. On Android, open it in Chrome and choose
+**Add to Home screen** (or **Install app**): it then opens full screen from
+its own icon and works offline.
+
+It lives in `docs/play/` (served by GitHub Pages); the code that joins the
+game to the web page is in `web/`. To build it yourself, install Python and
+Zig (`pip install ziglang`) and run `python web/build.py`.
+
 ## Features
 
 - **Four levels** that scroll every way: Steel City Streets, The Gearworks,
@@ -99,7 +112,7 @@ delete it to get the standard ones back.
 | File | |
 |---|---|
 | `volt.h` | what all the parts share |
-| `main.cpp` | the window, the game loop, keyboard and mouse, full screen |
+| `main.cpp` | the window, the game loop and full screen |
 | `game.cpp` | the rules: Jack, his blaster, the robots, the things to pick up |
 | `draw.cpp` | drawing the game, the backdrops, the status bar and title |
 | `editor.cpp` | the level editor |
@@ -113,6 +126,7 @@ delete it to get the standard ones back.
 | `scores.cpp` | the high-score table |
 | `inputbox.cpp` | a small "type some text" window |
 | `volt.rc`, `volt.ico` | the icon and version information |
+| `web/` | the browser version: `platform.cpp` and `index.html` take the place of `main.cpp` |
 
 `gen/make_art.py` and `gen/make_levels.py` are the Python scripts that made
 `art.cpp` and `defaults.cpp`; you don't need them to build the game.

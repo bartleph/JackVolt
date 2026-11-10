@@ -17,7 +17,9 @@
 #include <stdio.h>
 
 #define MIX_RATE    22050               // samples per second
-#define MIX_BUFS    4                   // buffers queued at once
+#ifndef MIX_BUFS
+#define MIX_BUFS    4                   // buffers queued at once (the browser version uses more)
+#endif
 #define MIX_LEN     512                 // samples per buffer (about 1/43 of a second)
 #define CHANNELS    6                   // effects that can play at the same time
 #define FX_VOLUME   150

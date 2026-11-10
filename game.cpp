@@ -397,6 +397,14 @@ void EndGame(void)
     StopSounds();
     if (ScoreQualifies(score))
     {
+#ifdef __wasm__
+        // In a web page nothing can stop and wait for typing, so the score
+        // goes in as "Jack" straight away and the page asks for a name for it
+        AddScore(score, "Jack");
+        char msg[80];
+        wsprintf(msg, "You scored %d - a new high score! Your name:", score);
+        WebAskText(1, score, msg, "");
+#else
         static char name[24] = "";
         char msg[80];
         wsprintf(msg, "You scored %d - a new high score! Your name:", score);
@@ -404,6 +412,7 @@ void EndGame(void)
             AddScore(score, name);
         else
             AddScore(score, "Anon");
+#endif
         state = ST_SCORES;
         stateTimer = 0;
         return;
@@ -978,4 +987,109 @@ void HeroSetState(float x, float y, float vy, BOOL ground)
 {
     heroX = x; heroY = y; heroVY = vy; onGround = ground;
     jumpWasHeld = FALSE;
+}
+
+// ============================================================================
+//  Keys and the mouse. main.cpp (or the browser version) passes them on;
+//  the level editor and the designer get them while they're open.
+// ============================================================================
+
+static void GameKey(WPARAM key)
+{
+    switch (key)
+    {
+    case VK_ESCAPE:
+        StopSounds();
+        if (testMode)
+            EnterEditor(levelNum);      // back to the editor after a test
+        else if (state == ST_TITLE || state == ST_SCORES)
+            QuitGame();
+        else
+            EndGame();                  // give up (a high score still counts)
+        break;
+
+    case 'E':
+        if (state == ST_TITLE || state == ST_SCORES)
+            EnterEditor(levelNum < numLevels ? levelNum : 0);
+        break;
+
+    case 'C':
+        if (state == ST_TITLE || state == ST_SCORES)
+            EnterDesigner();
+        break;
+
+    case 'H':
+        if (state == ST_TITLE || state == ST_SCORES)
+        {
+            state = (state == ST_TITLE) ? ST_SCORES : ST_TITLE;
+            stateTimer = 0;
+        }
+        break;
+
+    case 'P':
+        if (state == ST_PLAYING) paused = !paused;
+        break;
+
+    case 'S':
+        soundOn = !soundOn;
+        if (!soundOn) StopSounds();
+        break;
+
+    case 'M':
+        musicOn = !musicOn;
+        break;
+
+    case VK_RETURN:
+        if (state == ST_TITLE || state == ST_SCORES)
+            NewGame();
+        else if (state == ST_VICTORY && stateTimer > 60)
+            EndGame();
+        else if (state == ST_DONE)
+            stateTimer = 1000;          // skip the wait
+        else if (state == ST_DYING)
+            stateTimer = 1000;
+        break;
+    }
+}
+
+void KeyPressed(WPARAM key, BOOL repeat)
+{
+    // Ignore auto-repeat while a key is held - except in the editors, where
+    // holding an arrow key to scroll or slide is handy
+    if (state == ST_EDIT)
+        EditKey(key);
+    else if (state == ST_DESIGN)
+        DesignKey(key);
+    else if (!repeat)
+        GameKey(key);
+}
+
+// A gamepad's Start, Back or Y: like Enter, Esc or P, but not in the editors
+void PadKey(int key)
+{
+    if (state != ST_EDIT && state != ST_DESIGN)
+        GameKey(key);
+}
+
+void MousePressed(int x, int y, BOOL right)
+{
+    if (state == ST_EDIT)   EditMouseDown(x, y, right);
+    if (state == ST_DESIGN) DesignMouseDown(x, y, right);
+}
+
+void MouseMoved(int x, int y, WPARAM buttons)
+{
+    if (state == ST_EDIT)   EditMouseMove(x, y, buttons);
+    if (state == ST_DESIGN) DesignMouseMove(x, y, buttons);
+}
+
+void MouseReleased(void)
+{
+    EditMouseUp();
+}
+
+void MouseWheel(int delta, BOOL sideways)
+{
+    if (state == ST_EDIT)
+        EditWheel(delta, sideways);
 }

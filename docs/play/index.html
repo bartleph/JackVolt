@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); } body { margin: 0; } [hidden] { display: none !important; }</style>
+<title>Jack Volt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Jack Volt: a run-and-gun platform game. Fight Professor Gearhart's robots across four levels.">
+<meta name="theme-color" content="#0b0c1c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Chakra+Petch:wght@600;700&display=swap">
+<style>
+/* One screen: the game fills it, letterboxed; a slim bar of controls on top,
+   which floats over the game on short (phone, landscape) screens */
+:root {
+  --night: #0b0c1c;        /* the game's own night sky */
+  --panel: #161830;
+  --line: #2c2f55;
+  --text: #e6e8ff;
+  --muted: #9ca3d6;
+  --volt: #f8d838;         /* Jack's bolt */
+  --cyan: #40c8f0;         /* his suit */
+  --danger: #ff6a6a;
+  --ui: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: dark;
+}
+html { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--night); color: var(--text); font-family: var(--ui);
+  overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  height: 100%; display: flex; flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+#bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding-block: 8px; min-height: 44px;
+}
+#mark { font-weight: 700; letter-spacing: 0.14em; font-size: 15px; color: var(--volt); margin-right: auto; white-space: nowrap; }
+#mark span { color: var(--cyan); }
+#bar button {
+  font: 600 13px var(--ui); letter-spacing: 0.04em; color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer;
+}
+#bar button[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
+#bar button:hover { border-color: var(--cyan); }
+#bMenu { display: none; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+#stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; padding-bottom: 8px; }
+#screen { display: block; image-rendering: pixelated; background: #000; box-shadow: 0 0 0 1px var(--line), 0 12px 40px rgba(0, 0, 0, 0.5); }
+
+/* Short screens: the bar floats over the top of the game */
+@media (max-height: 520px) {
+  #bar { position: absolute; top: 6px; right: max(8px, env(safe-area-inset-right, 0px)); z-index: 6; padding: 0; min-height: 0; }
+  #mark, #bar button { display: none; }
+  #bar #bMenu { display: block; padding: 5px 9px; font-size: 11px; background: rgba(22, 24, 48, 0.7); }
+  #stage { padding-bottom: 0; }
+}
+
+/* Touch buttons, over the game, on phones and tablets while playing */
+#touch { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+#touch[hidden] { display: none !important; }
+.pad { position: absolute; bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; pointer-events: auto; }
+.pad.left { left: max(8px, env(safe-area-inset-left, 0px)); }
+.pad.right { right: max(8px, env(safe-area-inset-right, 0px)); flex-direction: column; align-items: center; }
+.pad.top-left { top: 8px; bottom: auto; left: max(8px, env(safe-area-inset-left, 0px)); }
+.tb {
+  width: min(56px, 15vh); height: min(56px, 15vh); border-radius: 50%;
+  border: 2px solid rgba(230, 232, 255, 0.35); background: rgba(22, 24, 48, 0.5);
+  color: var(--text); font: 700 11px var(--ui); letter-spacing: 0.05em;
+  display: flex; align-items: center; justify-content: center; touch-action: none; text-align: center;
+}
+.tb.fire, .tb.jump { width: min(64px, 17vh); height: min(64px, 17vh); }
+.tb.fire { border-color: rgba(248, 216, 56, 0.65); color: var(--volt); }
+.tb.jump { border-color: rgba(64, 200, 240, 0.65); color: var(--cyan); }
+.tb.small { width: min(46px, 12vh); height: min(46px, 12vh); font-size: 9px; }
+.tb.on { background: rgba(248, 216, 56, 0.35); }
+#tapHint { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); font: 700 15px var(--ui); letter-spacing: 0.08em; color: var(--volt); background: rgba(11, 12, 28, 0.7); padding: 8px 14px; border-radius: 6px; pointer-events: none; z-index: 4; }
+
+/* Messages, and the boxes for typing and for the panels */
+#toast {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 8;
+  max-width: min(560px, calc(100% - 32px)); background: var(--panel); border: 1px solid var(--volt);
+  color: var(--text); padding: 10px 14px; border-radius: 8px; font: 600 14px var(--ui); line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(5, 6, 16, 0.72); display: flex; align-items: center; justify-content: center; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px; touch-action: auto; -webkit-user-select: text; user-select: text; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; width: min(560px, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+.card h2 { margin: 0; font-size: 18px; letter-spacing: 0.06em; color: var(--volt); }
+.card p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 14px; }
+.card .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.card button { font: 600 14px var(--ui); color: var(--night); background: var(--volt); border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+.card button.plain { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.card input[type="text"], .card textarea, .card select { font: 700 14px var(--mono); color: var(--text); background: var(--night); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; }
+.card input[type="text"] { flex: 1; }
+.card textarea { width: 100%; box-sizing: border-box; height: 180px; font-size: 11px; line-height: 1.25; white-space: pre; resize: vertical; }
+.keys { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 14px; }
+.keys dt { font-family: var(--mono); color: var(--cyan); }
+.keys dd { margin: 0; color: var(--text); }
+#err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--danger); font: 600 15px var(--ui); padding: 24px; }
+</style>
+
+<div id="app">
+  <div id="bar">
+    <div id="mark">JACK <span>VOLT</span></div>
+    <button id="bSound" type="button" aria-pressed="true">Sound</button>
+    <button id="bMusic" type="button" aria-pressed="true">Music</button>
+    <button id="bFull" type="button">Full screen</button>
+    <button id="bFiles" type="button">Files</button>
+    <button id="bHelp" type="button">Help</button>
+    <button id="bMenu" type="button">Menu</button>
+  </div>
+  <div id="stage">
+    <canvas id="screen" width="640" height="400" aria-label="Jack Volt game screen"></canvas>
+    <div id="touch" hidden>
+      <div class="pad top-left"><div class="tb small" data-vk="80">PAUSE</div></div>
+      <div class="pad left">
+        <div class="tb" data-vk="37">&#9664;</div>
+        <div class="tb" data-vk="39">&#9654;</div>
+      </div>
+      <div class="pad right">
+        <div class="tb small" data-vk="38">EXIT &#9650;</div>
+        <div class="tb fire" data-vk="17">FIRE</div>
+        <div class="tb jump" data-vk="32">JUMP</div>
+      </div>
+    </div>
+    <div id="tapHint" hidden>Tap the screen to play</div>
+    <div id="toast" hidden></div>
+  </div>
+</div>
+
+<div class="sheet" id="askSheet" hidden>
+  <form class="card" id="askForm">
+    <h2 id="askTitle">Your name</h2>
+    <div class="row">
+      <input type="text" id="askInput" maxlength="20" autocomplete="off">
+      <button type="submit">OK</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="menuSheet" hidden>
+  <div class="card">
+    <h2>Jack Volt</h2>
+    <div class="row">
+      <button type="button" class="plain" data-proxy="bSound">Sound on/off</button>
+      <button type="button" class="plain" data-proxy="bMusic">Music on/off</button>
+      <button type="button" class="plain" data-proxy="bFull">Full screen</button>
+      <button type="button" class="plain" data-proxy="bFiles">Files</button>
+      <button type="button" class="plain" data-proxy="bHelp">Help</button>
+    </div>
+    <div class="row"><button type="button" data-close>Back to the game</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="helpSheet" hidden>
+  <div class="card">
+    <h2>How to play</h2>
+    <p>Professor Gearhart's robots have taken over Steel City. Find the coloured keys, shoot crates and cracked blocks open, and reach the exit. Stand on crates to keep out of a robot's way.</p>
+    <dl class="keys">
+      <dt>&larr; &rarr;</dt><dd>Run</dd>
+      <dt>Space, Alt, Z</dt><dd>Jump (hold for higher)</dd>
+      <dt>Ctrl, X</dt><dd>Fire</dd>
+      <dt>&uarr;</dt><dd>Go through the exit</dd>
+      <dt>Enter</dt><dd>Play</dd>
+      <dt>P</dt><dd>Pause</dd>
+      <dt>H, E, C</dt><dd>On the title: high scores, level editor, character designer</dd>
+      <dt>Esc</dt><dd>Give up, or leave an editor</dd>
+      <dt>F11</dt><dd>Full screen</dd>
+    </dl>
+    <p>On a phone or tablet, use the buttons on the screen and tap to play. A gamepad works too: A jumps, X or B fires, Start plays. The editors need a keyboard and mouse.</p>
+    <div class="row"><button type="button" data-close>Back to the game</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="filesSheet" hidden>
+  <div class="card">
+    <h2>Files</h2>
+    <p>Your levels, artwork and high scores are kept in this browser. Copy them here to use in the Windows version (paste into levels.txt or sprites.txt next to Volt.exe), or paste those files in to use them here.</p>
+    <div class="row">
+      <select id="fileWhich" aria-label="Which file">
+        <option value="levels.txt">Levels (levels.txt)</option>
+        <option value="sprites.txt">Artwork (sprites.txt)</option>
+      </select>
+      <button type="button" class="plain" id="fileShow">Show</button>
+      <button type="button" class="plain" id="fileCopy">Copy</button>
+    </div>
+    <textarea id="fileText" spellcheck="false" aria-label="File contents"></textarea>
+    <div class="row">
+      <button type="button" id="fileUse">Use this text</button>
+      <label class="plain" style="cursor:pointer; border:1px solid var(--line); border-radius:6px; padding:7px 12px; font:600 14px var(--ui)">Open a file&hellip;<input type="file" id="fileOpen" accept=".txt,text/plain" hidden></label>
+      <button type="button" class="plain" id="fileStandard">Back to standard</button>
+    </div>
+    <p id="fileNote"></p>
+    <div class="row"><button type="button" class="plain" data-close>Close</button></div>
+  </div>
+</div>
+
+<script>
+
+(function () {
+  "use strict";
+  var canvas = document.getElementById("screen"), ctx = canvas.getContext("2d");
+  var off = document.createElement("canvas"); off.width = 640; off.height = 400;
+  var octx = off.getContext("2d"), image = octx.createImageData(640, 400);
+  var measure = document.createElement("canvas").getContext("2d");
+  var FONT = '"JetBrains Mono", Consolas, "Courier New", monospace';
+  var ex = null, texts = [], scale = 1;
+  var ST = { TITLE: 0, PLAYING: 1, DYING: 2, DONE: 3, VICTORY: 4, SCORES: 5, EDIT: 6, DESIGN: 7 };
+  var isTouch = ("ontouchstart" in window) || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
+
+  // ---- Storage: the browser's, or just memory if that isn't allowed
+  var memoryStore = {};
+  function load(name) { try { var v = localStorage.getItem("jackvolt/" + name); if (v !== null) return v; } catch (e) {} return memoryStore[name] === undefined ? null : memoryStore[name]; }
+  function save(name, text) { memoryStore[name] = text; try { localStorage.setItem("jackvolt/" + name, text); } catch (e) {} return true; }
+  function forget(name) { delete memoryStore[name]; try { localStorage.removeItem("jackvolt/" + name); } catch (e) {} }
+
+  // ---- Strings to and from the game's memory (plain 8-bit text)
+  function bytes() { return new Uint8Array(ex.memory.buffer); }
+  function str(p, n) { var b = bytes(), s = ""; if (n === undefined) { n = 0; while (b[p + n]) n++; } for (var i = 0; i < n; i++) s += String.fromCharCode(b[p + i]); return s; }
+  function put(p, s, max) { var b = bytes(), n = Math.min(s.length, max - 1); for (var i = 0; i < n; i++) { var c = s.charCodeAt(i); b[p + i] = c < 256 ? c : 63; } b[p + n] = 0; }
+  function font(h, k) { return "700 " + (h * 0.92 * k) + "px " + FONT; }
+
+  // ---- Messages: the game asks to confirm by asking twice
+  var toastEl = document.getElementById("toast"), toastTimer = 0, lastAsk = { text: "", time: 0 };
+  function toast(text, ms) { toastEl.textContent = text; toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { toastEl.hidden = true; }, ms || 4500); }
+
+  var imports = { env: {
+    js_text: function (x, y, p, n, h, c) { texts.push([x, y, str(p, n), h, c]); },
+    js_measure: function (p, n, h) { measure.font = font(h, 1); return Math.round(measure.measureText(str(p, n)).width); },
+    js_message: function (p, type) {
+      var text = str(p);
+      if (type === 0) { toast(text.replace(/\n/g, " ")); return 1; }
+      var now = performance.now(), again = lastAsk.text === text && now - lastAsk.time < 5000;
+      lastAsk = { text: text, time: again ? 0 : now };
+      if (again) { toastEl.hidden = true; return type === 1 ? 6 : 7; }        // yes / leave without saving
+      toast(type === 1 ? text + " Do that again to confirm."
+                       : "You have unsaved changes. Press Ctrl+S to save them, or press Esc again to leave without saving.", 5000);
+      return type === 1 ? 7 : 2;                                               // no / stay
+    },
+    js_prompt: function (p, q) { askFor(str(p), str(q)); },
+    js_size: function (p) { var v = load(str(p)); return v === null ? -1 : v.length; },
+    js_read: function (p, buf) { var v = load(str(p)) || ""; put(buf, v, v.length + 1); },
+    js_write: function (p, d, n) { return save(str(p), str(d, n)) ? 1 : 0; }
+  } };
+
+  // ---- Typing a name
+  var askSheet = document.getElementById("askSheet"), askInput = document.getElementById("askInput");
+  function askFor(prompt, initial) {
+    document.getElementById("askTitle").textContent = prompt;
+    askInput.value = initial; askSheet.hidden = false; releaseKeys();
+    setTimeout(function () { askInput.focus(); askInput.select(); }, 30);
+  }
+  document.getElementById("askForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    put(ex.web_text_buffer(), askInput.value.trim(), 64);
+    ex.web_text_done(); askSheet.hidden = true; canvas.focus();
+  });
+
+  // ---- Fitting the screen, with text drawn sharp at the real size
+  function fit() {
+    var stage = document.getElementById("stage");
+    var aw = stage.clientWidth, ah = stage.clientHeight - (parseFloat(getComputedStyle(stage).paddingBottom) || 0);
+    var w = Math.max(160, Math.min(aw, ah * 1.6)), h = w / 1.6, dpr = window.devicePixelRatio || 1;
+    canvas.style.width = Math.floor(w) + "px"; canvas.style.height = Math.floor(h) + "px";
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    scale = canvas.width / 640;
+  }
+  window.addEventListener("resize", fit);
+
+  function draw() {
+    texts = [];
+    var p = ex.web_render();
+    image.data.set(new Uint8Array(ex.memory.buffer, p, 640 * 400 * 4));
+    octx.putImageData(image, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+    ctx.textBaseline = "top";
+    for (var i = 0; i < texts.length; i++) {
+      var t = texts[i], c = t[4];
+      ctx.font = font(t[3], scale);
+      ctx.fillStyle = "rgb(" + (c & 255) + "," + ((c >> 8) & 255) + "," + ((c >> 16) & 255) + ")";
+      ctx.fillText(t[2], t[0] * scale, t[1] * scale);
+    }
+  }
+
+  // ---- Sound: the game's own mixer, at 22050 samples a second
+  var actx = null;
+  function startAudio() {
+    if (actx) { if (actx.state === "suspended") actx.resume(); return; }
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      var node = actx.createScriptProcessor(1024, 0, 1), src = new Float32Array(1), pos = 0, step = 22050 / actx.sampleRate;
+      node.onaudioprocess = function (e) {
+        var out = e.outputBuffer.getChannelData(0);
+        for (var i = 0; i < out.length; i++) {
+          if (pos + 1 >= src.length) {
+            var keep = src[src.length - 1], q = ex.web_audio(512), more = new Float32Array(513);
+            more[0] = keep; more.set(new Float32Array(ex.memory.buffer, q, 512), 1);
+            pos -= src.length - 1; src = more;
+          }
+          var i0 = pos | 0, t = pos - i0;
+          out[i] = (src[i0] * (1 - t) + src[i0 + 1] * t) * 0.9;
+          pos += step;
+        }
+      };
+      node.connect(actx.destination);
+    } catch (e) { actx = null; }
+  }
+
+  // ---- Keys: the browser's key names to Windows key numbers
+  var VK = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Space: 32, Enter: 13, NumpadEnter: 13,
+    Escape: 27, ControlLeft: 17, ControlRight: 17, AltLeft: 18, AltRight: 18, ShiftLeft: 16, ShiftRight: 16,
+    Tab: 9, PageUp: 33, PageDown: 34, Home: 36, End: 35, Delete: 46, BracketLeft: 219, BracketRight: 221, F11: 122 };
+  function vkOf(e) {
+    if (VK[e.code] !== undefined) return VK[e.code];
+    var m = /^Key([A-Z])$/.exec(e.code); if (m) return m[1].charCodeAt(0);
+    m = /^Digit([0-9])$/.exec(e.code); if (m) return m[1].charCodeAt(0);
+    return 0;
+  }
+  var held = {};
+  function key(vk, down, repeat) { if (!ex) return; if (down) held[vk] = 1; else delete held[vk]; ex.web_key(vk, down ? 1 : 0, repeat ? 1 : 0); }
+  function releaseKeys() { for (var k in held) key(+k, false); held = {}; }
+  function sheetOpen() { var s = document.querySelectorAll(".sheet"); for (var i = 0; i < s.length; i++) if (!s[i].hidden) return true; return false; }
+
+  window.addEventListener("keydown", function (e) {
+    if (sheetOpen()) { if (e.key === "Escape") closeSheets(); return; }
+    var vk = vkOf(e); if (!vk) return;
+    startAudio();
+    e.preventDefault();
+    if (vk === 122) { if (!e.repeat) toggleFull(); return; }
+    key(vk, true, e.repeat);
+    syncButtons();
+  });
+  window.addEventListener("keyup", function (e) { var vk = vkOf(e); if (vk && held[vk]) { e.preventDefault(); key(vk, false); } });
+  window.addEventListener("blur", function () { releaseKeys(); if (ex) ex.web_active(0); });
+  window.addEventListener("focus", function () { if (ex) ex.web_active(1); });
+  document.addEventListener("visibilitychange", function () { if (!ex) return; ex.web_active(document.hidden ? 0 : 1); if (document.hidden) releaseKeys(); });
+
+  // ---- The mouse (and a finger on the screen)
+  function gameXY(e) { var r = canvas.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) * 640 / r.width), Math.floor((e.clientY - r.top) * 400 / r.height)]; }
+  canvas.addEventListener("pointerdown", function (e) {
+    if (!ex) return; startAudio(); e.preventDefault();
+    var s = ex.web_state(), p = gameXY(e);
+    if (s === ST.EDIT || s === ST.DESIGN) {
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      ex.web_mouse_move(p[0], p[1], 0);
+      ex.web_mouse_down(p[0], p[1], e.button === 2 ? 1 : 0);
+    } else if (e.pointerType !== "mouse" || s !== ST.PLAYING) {
+      if (s !== ST.PLAYING) { key(13, true); key(13, false); }    // a tap (or click) carries on, like Enter
+    }
+  });
+  canvas.addEventListener("pointermove", function (e) { if (!ex) return; var p = gameXY(e); ex.web_mouse_move(p[0], p[1], e.buttons & 3); });
+  canvas.addEventListener("pointerup", function () { if (ex) ex.web_mouse_up(); });
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  canvas.addEventListener("wheel", function (e) { if (!ex) return; e.preventDefault(); ex.web_wheel(e.deltaY > 0 ? -120 : 120, e.shiftKey ? 1 : 0); }, { passive: false });
+
+  // ---- Touch buttons: a finger can slide from one to the next
+  var touchEl = document.getElementById("touch"), fingers = {}, touchVk = {};
+  function buttonAt(x, y) { var el = document.elementFromPoint(x, y); return el && el.classList && el.classList.contains("tb") ? el : null; }
+  function updateFingers() {
+    var want = {};
+    for (var id in fingers) if (fingers[id]) want[fingers[id].dataset.vk] = 1;
+    var all = touchEl.querySelectorAll(".tb");
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle("on", !!want[all[i].dataset.vk]);
+    for (var vk in want) if (!touchVk[vk]) { touchVk[vk] = 1; key(+vk, true); }
+    for (vk in touchVk) if (!want[vk]) { delete touchVk[vk]; key(+vk, false); }
+  }
+  touchEl.addEventListener("pointerdown", function (e) { startAudio(); e.preventDefault(); fingers[e.pointerId] = buttonAt(e.clientX, e.clientY); updateFingers(); });
+  touchEl.addEventListener("pointermove", function (e) { if (e.pointerId in fingers) { fingers[e.pointerId] = buttonAt(e.clientX, e.clientY); updateFingers(); } });
+  function lift(e) { delete fingers[e.pointerId]; updateFingers(); }
+  touchEl.addEventListener("pointerup", lift); touchEl.addEventListener("pointercancel", lift);
+
+  // ---- Gamepads, in the same form as the Windows version's XInput
+  function pollPad() {
+    var gps = navigator.getGamepads ? navigator.getGamepads() : [], b = 0;
+    for (var i = 0; i < gps.length; i++) {
+      var g = gps[i]; if (!g) continue;
+      var B = function (n) { return g.buttons[n] && g.buttons[n].pressed; };
+      if (B(12)) b |= 1; if (B(13)) b |= 2; if (B(14)) b |= 4; if (B(15)) b |= 8;
+      if (B(9)) b |= 16; if (B(8)) b |= 32; if (B(0)) b |= 0x1000; if (B(1)) b |= 0x2000; if (B(2)) b |= 0x4000; if (B(3)) b |= 0x8000;
+      var ax = g.axes[0] || 0, ay = g.axes[1] || 0;
+      if (ax < -0.4) b |= 4; if (ax > 0.4) b |= 8; if (ay < -0.4) b |= 1; if (ay > 0.4) b |= 2;
+      if (b) startAudio();
+      break;
+    }
+    ex.web_pad(b);
+  }
+
+  // ---- The bar
+  var bSound = document.getElementById("bSound"), bMusic = document.getElementById("bMusic");
+  var soundOn = true, musicOn = true;
+  function tapKey(vk) { key(vk, true); key(vk, false); }
+  bSound.addEventListener("click", function () { startAudio(); tapKey(83); soundOn = !soundOn; syncButtons(); });
+  bMusic.addEventListener("click", function () { startAudio(); tapKey(77); musicOn = !musicOn; syncButtons(); });
+  function syncButtons() { bSound.setAttribute("aria-pressed", soundOn); bMusic.setAttribute("aria-pressed", musicOn); }
+  // S and M also toggle from the keyboard; keep the bar in step
+  window.addEventListener("keydown", function (e) {
+    if (sheetOpen() || !ex) return;
+    var s = ex.web_state(); if (s === ST.EDIT || s === ST.DESIGN) return;
+    if (e.code === "KeyS" && !e.ctrlKey && !e.repeat) { soundOn = !soundOn; syncButtons(); }
+    if (e.code === "KeyM" && !e.repeat) { musicOn = !musicOn; syncButtons(); }
+  });
+  function toggleFull() {
+    var el = document.documentElement;
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (el.requestFullscreen) el.requestFullscreen().catch(function () { toast("Full screen isn't available here."); });
+      else toast("Full screen isn't available here.");
+    } catch (e) { toast("Full screen isn't available here."); }
+  }
+  document.getElementById("bFull").addEventListener("click", toggleFull);
+  document.addEventListener("fullscreenchange", function () { setTimeout(fit, 50); });
+
+  function closeSheets() { var s = document.querySelectorAll(".sheet"); for (var i = 0; i < s.length; i++) if (s[i].id !== "askSheet") s[i].hidden = true; canvas.focus(); }
+  var closers = document.querySelectorAll("[data-close]");
+  for (var i = 0; i < closers.length; i++) closers[i].addEventListener("click", closeSheets);
+  document.getElementById("bHelp").addEventListener("click", function () { releaseKeys(); document.getElementById("helpSheet").hidden = false; });
+  document.getElementById("bMenu").addEventListener("click", function () { releaseKeys(); document.getElementById("menuSheet").hidden = false; });
+  var proxies = document.querySelectorAll("[data-proxy]");
+  for (var j = 0; j < proxies.length; j++) proxies[j].addEventListener("click", function (e) {
+    document.getElementById("menuSheet").hidden = true;
+    document.getElementById(e.currentTarget.dataset.proxy).click();
+  });
+
+  // ---- Files: copy levels and artwork in and out
+  var fileWhich = document.getElementById("fileWhich"), fileText = document.getElementById("fileText"), fileNote = document.getElementById("fileNote");
+  function showFile() {
+    var name = fileWhich.value;
+    if (load(name) === null) ex.web_export(name === "levels.txt" ? 1 : 2);   // write out the standard ones
+    fileText.value = (load(name) || "").replace(/\r\n/g, "\n");
+    fileNote.textContent = "";
+  }
+  document.getElementById("bFiles").addEventListener("click", function () {
+    releaseKeys();
+    var s = ex.web_state();
+    if (s === ST.EDIT || s === ST.DESIGN) { toast("Leave the editor first (Esc), so your changes are saved or put aside."); return; }
+    document.getElementById("filesSheet").hidden = false; showFile();
+  });
+  fileWhich.addEventListener("change", showFile);
+  document.getElementById("fileShow").addEventListener("click", showFile);
+  document.getElementById("fileCopy").addEventListener("click", function () {
+    var t = fileText.value;
+    if (navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(t).then(function () { fileNote.textContent = "Copied."; }, function () { fileText.select(); fileNote.textContent = "Selected: press Ctrl+C to copy."; });
+    else { fileText.select(); fileNote.textContent = "Selected: press Ctrl+C to copy."; }
+  });
+  function useText(text) {
+    var name = fileWhich.value, want = name === "levels.txt" ? /^\s*LEVEL /m : /^\s*SPRITE /m;
+    if (!want.test(text)) { fileNote.textContent = "That doesn't look like " + name + ". Check the choice above."; return; }
+    save(name, text.replace(/\r?\n/g, "\r\n")); ex.web_reload();
+    fileNote.textContent = "Done: the game is using it now.";
+  }
+  document.getElementById("fileUse").addEventListener("click", function () { useText(fileText.value); });
+  document.getElementById("fileOpen").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () { var t = String(r.result); if (/^\s*SPRITE /m.test(t)) fileWhich.value = "sprites.txt"; else if (/^\s*LEVEL /m.test(t)) fileWhich.value = "levels.txt"; fileText.value = t.replace(/\r\n/g, "\n"); useText(t); };
+    r.readAsText(f); e.target.value = "";
+  });
+  document.getElementById("fileStandard").addEventListener("click", function () {
+    forget(fileWhich.value); ex.web_reload(); showFile();
+    fileNote.textContent = "Back to the standard " + (fileWhich.value === "levels.txt" ? "levels." : "artwork.");
+  });
+
+  // ---- Start, then run at 60 steps a second whatever the screen's rate
+  function fail(msg) { var d = document.createElement("div"); d.id = "err"; d.textContent = msg; document.getElementById("stage").appendChild(d); }
+  function wasmBytes() {
+    if (window.VOLT_WASM) { var s = atob(window.VOLT_WASM), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return Promise.resolve(b.buffer); }
+    return fetch("volt.wasm").then(function (r) { if (!r.ok) throw new Error("volt.wasm: " + r.status); return r.arrayBuffer(); });
+  }
+  var fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load(font(14, 1)), document.fonts.load("600 13px Chakra Petch")]).catch(function () {}) : Promise.resolve();
+  var timeout = new Promise(function (res) { setTimeout(res, 1500); });
+
+  Promise.all([wasmBytes(), Promise.race([fontsReady, timeout])]).then(function (r) {
+    return WebAssembly.instantiate(r[0], imports);
+  }).then(function (result) {
+    ex = result.instance.exports;
+    if (ex._initialize) ex._initialize();
+    ex.web_init((Math.random() * 1e9) | 0);
+    fit(); canvas.tabIndex = 0;
+    var last = performance.now(), acc = 0, shown = -1;
+    function frame(now) {
+      try {
+        acc += Math.min(now - last, 100); last = now;
+        var steps = 0;
+        while (acc >= 1000 / 60 && steps < 5) { pollPad(); ex.web_step(); acc -= 1000 / 60; steps++; }
+        if (steps) draw();
+        var s = ex.web_state();
+        if (isTouch && shown !== s) {
+          touchEl.hidden = !(s === ST.PLAYING || s === ST.DYING || s === ST.DONE);
+          document.getElementById("tapHint").hidden = !(s === ST.TITLE || s === ST.SCORES || s === ST.VICTORY);
+          shown = s; if (touchEl.hidden) { fingers = {}; updateFingers(); }
+        }
+        requestAnimationFrame(frame);
+      } catch (e) { fail("Jack Volt stopped: " + e.message); }
+    }
+    requestAnimationFrame(frame);
+  }).catch(function (e) { fail("Jack Volt couldn't start here: " + e.message); });
+})();
+</script>
+<script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>

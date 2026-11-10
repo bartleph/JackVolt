@@ -115,62 +115,10 @@ static void ToggleFullScreen(HWND hwnd)
 //  Keys for the game and the title screen
 // ============================================================================
 
-static void GameKey(HWND hwnd, WPARAM key)
+// Esc on the title screen: close the window
+void QuitGame(void)
 {
-    switch (key)
-    {
-    case VK_ESCAPE:
-        StopSounds();
-        if (testMode)
-            EnterEditor(levelNum);      // back to the editor after a test
-        else if (state == ST_TITLE || state == ST_SCORES)
-            SendMessage(hwnd, WM_CLOSE, 0, 0);
-        else
-            EndGame();                  // give up (a high score still counts)
-        break;
-
-    case 'E':
-        if (state == ST_TITLE || state == ST_SCORES)
-            EnterEditor(levelNum < numLevels ? levelNum : 0);
-        break;
-
-    case 'C':
-        if (state == ST_TITLE || state == ST_SCORES)
-            EnterDesigner();
-        break;
-
-    case 'H':
-        if (state == ST_TITLE || state == ST_SCORES)
-        {
-            state = (state == ST_TITLE) ? ST_SCORES : ST_TITLE;
-            stateTimer = 0;
-        }
-        break;
-
-    case 'P':
-        if (state == ST_PLAYING) paused = !paused;
-        break;
-
-    case 'S':
-        soundOn = !soundOn;
-        if (!soundOn) StopSounds();
-        break;
-
-    case 'M':
-        musicOn = !musicOn;
-        break;
-
-    case VK_RETURN:
-        if (state == ST_TITLE || state == ST_SCORES)
-            NewGame();
-        else if (state == ST_VICTORY && stateTimer > 60)
-            EndGame();
-        else if (state == ST_DONE)
-            stateTimer = 1000;          // skip the wait
-        else if (state == ST_DYING)
-            stateTimer = 1000;
-        break;
-    }
+    SendMessage(hwndMain, WM_CLOSE, 0, 0);
 }
 
 // ============================================================================
@@ -203,42 +151,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_KEYDOWN:
-        // Ignore auto-repeat while a key is held - except in the editor,
-        // where holding an arrow key to scroll is handy
-        if ((lParam & 0x40000000) && state != ST_EDIT && state != ST_DESIGN)
-            return 0;
         if (wParam == VK_F11)
             ToggleFullScreen(hwnd);
-        else if (state == ST_EDIT)
-            EditKey(wParam);
-        else if (state == ST_DESIGN)
-            DesignKey(wParam);
         else
-            GameKey(hwnd, wParam);
+            KeyPressed(wParam, (lParam & 0x40000000) != 0);
         return 0;
 
     // ---- The mouse, used by the level editor and the designer
     case WM_MOUSEMOVE:
         ToGame(lParam, &x, &y);
-        if (state == ST_EDIT)   EditMouseMove(x, y, wParam);
-        if (state == ST_DESIGN) DesignMouseMove(x, y, wParam);
+        MouseMoved(x, y, wParam);
         return 0;
 
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
         ToGame(lParam, &x, &y);
-        if (state == ST_EDIT)   EditMouseDown(x, y, msg == WM_RBUTTONDOWN);
-        if (state == ST_DESIGN) DesignMouseDown(x, y, msg == WM_RBUTTONDOWN);
+        MousePressed(x, y, msg == WM_RBUTTONDOWN);
         return 0;
 
     case WM_LBUTTONUP:
     case WM_RBUTTONUP:
-        EditMouseUp();
+        MouseReleased();
         return 0;
 
     case WM_MOUSEWHEEL:
-        if (state == ST_EDIT)
-            EditWheel(GET_WHEEL_DELTA_WPARAM(wParam), (GET_KEYSTATE_WPARAM(wParam) & MK_SHIFT) != 0);
+        MouseWheel(GET_WHEEL_DELTA_WPARAM(wParam), (GET_KEYSTATE_WPARAM(wParam) & MK_SHIFT) != 0);
         return 0;
 
     // Alt is a jump key, so stop Windows using it to open the (missing) menu.
@@ -381,8 +318,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 // and Y act like Enter, Esc and P
                 PadPoll();
                 int key = PadPressed();
-                if (key && active && state != ST_EDIT && state != ST_DESIGN)
-                    GameKey(hwnd, key);
+                if (key && active)
+                    PadKey(key);
 
                 Update();
                 behind -= STEP;

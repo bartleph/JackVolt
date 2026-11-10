@@ -134,6 +134,13 @@ BOOL  KeyDown(int vk);
 BOOL  Solid(int tx, int ty);
 char  TileAt(int tx, int ty);
 void  MoveHero(void);
+void  KeyPressed(WPARAM key, BOOL repeat);     // keys and the mouse, passed on
+void  PadKey(int key);                          // by main.cpp or the browser
+void  MousePressed(int x, int y, BOOL right);
+void  MouseMoved(int x, int y, WPARAM buttons);
+void  MouseReleased(void);
+void  MouseWheel(int delta, BOOL sideways);
+void  QuitGame(void);                           // (in main.cpp)
 void  OpenDoors(char door);
 int   CrateAt(int tx, int ty);
 void  OpenCrate(Actor *a);
@@ -204,6 +211,7 @@ void  EditWheel(int delta, BOOL sideways);
 BOOL  EditCanClose(void);
 void  DrawEditor(void);
 const char *LevelProblem(const Level *l);
+void  SetLevelName(const char *name);
 BOOL  SaveLevels(void);
 int   ImportStandardLevels(void);
 
@@ -251,6 +259,12 @@ void  LoadScores(void);
 BOOL  ScoreQualifies(int s);
 void  AddScore(int s, const char *name);
 int   HiScore(void);
+void  RenameScore(int s, const char *from, const char *to);
+
+#ifdef __wasm__
+// ---- web/platform.cpp: ask the page for some text; the answer comes later
+void  WebAskText(int what, int number, const char *prompt, const char *initial);
+#endif
 
 // ---- inputbox.cpp
 BOOL  InputBox(HWND owner, const char *title, const char *prompt, char *buf, int size);
