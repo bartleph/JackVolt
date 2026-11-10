@@ -600,6 +600,9 @@ out=["// art.cpp - the pictures, made by gen/make_art.py",
      "const COLORREF palette[16] =","{"]
 for i in range(0,16,4):
     out.append("    "+" ".join("RGB(%d, %d, %d),"%tuple(int(PAL[j][k:k+2],16) for k in (0,2,4)) for j in range(i,i+4)))
+out+=["};","","// Their names in sprites.txt","const char *spriteIds[NUM_SPRITES] =","{"]
+for i in range(0,len(ART),6):
+    out.append("    "+" ".join('"%s",'%n for n,_ in ART[i:i+6]))
 out+=["};","","const SpriteArt spriteArt[NUM_SPRITES] =","{"]
 for name,rows in ART:
     out.append("    // %s"%name)

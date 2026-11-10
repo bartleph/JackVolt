@@ -20,6 +20,8 @@ and reach the exit - then deal with the professor himself.
   (up to four shots at once) and spring boots
 - **Three tunes** written for the game, two voices each, and sound effects,
   from a small built-in mixer
+- **A character designer**: a pixel editor for every picture in the game,
+  with a live preview (Jack's six-frame walk animates as you draw)
 - **A level editor** with test play and a **level checker** that explores
   every place Jack can reach, using the game's own physics, and shows anything
   he can't get to
@@ -59,6 +61,7 @@ Other MinGW-w64 compilers work too, e.g.
 | F11 | full screen |
 | H | high scores (on the title screen) |
 | E | level editor (on the title screen) |
+| C | character designer (on the title screen) |
 | Esc | give up, or quit |
 
 On a gamepad: the stick or d-pad moves, A jumps, X or B fires, Y pauses,
@@ -81,6 +84,16 @@ Levels are kept in `levels.txt` next to the program, so they can be edited in
 Notepad too: one character per map square, with the key at the top of the
 file.
 
+## Designing characters
+
+Press **C** on the title screen. Pick Jack, Robots, Things or Tiles with the
+tabs, click a picture, and paint: click to paint, right-click to rub out,
+Shift+click to fill, Ctrl+click to pick up a colour, **Ctrl+Z** to undo and
+**Ctrl+S** to save. Pictures are kept in `sprites.txt` next to the program;
+delete it to get the standard ones back.
+
+![The character designer](docs/designer.png)
+
 ## The code
 
 | File | |
@@ -90,10 +103,11 @@ file.
 | `game.cpp` | the rules: Jack, his blaster, the robots, the things to pick up |
 | `draw.cpp` | drawing the game, the backdrops, the status bar and title |
 | `editor.cpp` | the level editor |
+| `designer.cpp` | the character designer, and `sprites.txt` |
 | `checker.cpp` | the level checker |
 | `levels.cpp` | reading `levels.txt` |
 | `defaults.cpp` | the standard levels |
-| `art.cpp` | the pictures, as grids of colour numbers |
+| `art.cpp` | the standard pictures, as grids of colour numbers |
 | `sound.cpp` | the sound mixer, the effects and the tunes |
 | `pad.cpp` | gamepads |
 | `scores.cpp` | the high-score table |

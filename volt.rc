@@ -9,8 +9,8 @@
 1 ICON "volt.ico"
 
 1 VERSIONINFO
-FILEVERSION     1,1,0,0
-PRODUCTVERSION  1,1,0,0
+FILEVERSION     1,2,0,0
+PRODUCTVERSION  1,2,0,0
 FILEOS          VOS_NT_WINDOWS32
 FILETYPE        VFT_APP
 BEGIN
@@ -19,11 +19,11 @@ BEGIN
         BLOCK "080904B0"                // UK English, Unicode
         BEGIN
             VALUE "FileDescription",  "Jack Volt - a run-and-gun platform game"
-            VALUE "FileVersion",      "1.1.0.0"
+            VALUE "FileVersion",      "1.2.0.0"
             VALUE "InternalName",     "Volt"
             VALUE "OriginalFilename", "Volt.exe"
             VALUE "ProductName",      "Jack Volt"
-            VALUE "ProductVersion",   "1.1"
+            VALUE "ProductVersion",   "1.2"
             VALUE "LegalCopyright",   "Written in Dev-C++"
         END
     END

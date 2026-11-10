@@ -7,7 +7,8 @@
 //
 //  Keys:  Left/Right = run    Space, Alt or Z = jump    Ctrl or X = fire
 //         Up = go through the exit    P = pause    S = sound    M = music
-//         F11 = full screen    H = high scores    E = level editor (on the title)
+//         F11 = full screen    on the title: H = high scores, E = level editor,
+//         C = character designer
 //         Esc = title / quit
 //  A gamepad works too: A jump, X or B fire, Y pause, Start, Back = Esc.
 // ============================================================================
@@ -133,6 +134,11 @@ static void GameKey(HWND hwnd, WPARAM key)
             EnterEditor(levelNum < numLevels ? levelNum : 0);
         break;
 
+    case 'C':
+        if (state == ST_TITLE || state == ST_SCORES)
+            EnterDesigner();
+        break;
+
     case 'H':
         if (state == ST_TITLE || state == ST_SCORES)
         {
@@ -187,6 +193,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         MakeFonts();
         LoadScores();
         LoadLevels();
+        LoadSprites();
         ShowTitle();
         return 0;
     }
@@ -198,32 +205,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         // Ignore auto-repeat while a key is held - except in the editor,
         // where holding an arrow key to scroll is handy
-        if ((lParam & 0x40000000) && state != ST_EDIT)
+        if ((lParam & 0x40000000) && state != ST_EDIT && state != ST_DESIGN)
             return 0;
         if (wParam == VK_F11)
             ToggleFullScreen(hwnd);
         else if (state == ST_EDIT)
             EditKey(wParam);
+        else if (state == ST_DESIGN)
+            DesignKey(wParam);
         else
             GameKey(hwnd, wParam);
         return 0;
 
-    // ---- The mouse, used by the editor
+    // ---- The mouse, used by the level editor and the designer
     case WM_MOUSEMOVE:
-        if (state == ST_EDIT)
-        {
-            ToGame(lParam, &x, &y);
-            EditMouseMove(x, y, wParam);
-        }
+        ToGame(lParam, &x, &y);
+        if (state == ST_EDIT)   EditMouseMove(x, y, wParam);
+        if (state == ST_DESIGN) DesignMouseMove(x, y, wParam);
         return 0;
 
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
-        if (state == ST_EDIT)
-        {
-            ToGame(lParam, &x, &y);
-            EditMouseDown(x, y, msg == WM_RBUTTONDOWN);
-        }
+        ToGame(lParam, &x, &y);
+        if (state == ST_EDIT)   EditMouseDown(x, y, msg == WM_RBUTTONDOWN);
+        if (state == ST_DESIGN) DesignMouseDown(x, y, msg == WM_RBUTTONDOWN);
         return 0;
 
     case WM_LBUTTONUP:
@@ -258,7 +263,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 
     case WM_CLOSE:                      // the window's X button, or Esc on the title
-        if (EditCanClose())
+        if (EditCanClose() && DesignCanClose())
             DestroyWindow(hwnd);
         return 0;
 
@@ -376,7 +381,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 // and Y act like Enter, Esc and P
                 PadPoll();
                 int key = PadPressed();
-                if (key && active && state != ST_EDIT)
+                if (key && active && state != ST_EDIT && state != ST_DESIGN)
                     GameKey(hwnd, key);
 
                 Update();

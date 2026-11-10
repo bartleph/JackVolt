@@ -23,6 +23,7 @@
 #define MAX_LEVELS  16
 #define LEVEL_FILE  "levels.txt"
 #define SCORE_FILE  "scores.txt"
+#define SPRITE_FILE "sprites.txt"
 
 // ---- The hero
 #define HERO_W      20                  // the part of him that touches things
@@ -36,7 +37,7 @@
 #define MAX_BITS    300                 // sparks and floating scores
 
 // ---- Game states
-enum { ST_TITLE, ST_PLAYING, ST_DYING, ST_DONE, ST_VICTORY, ST_SCORES, ST_EDIT };
+enum { ST_TITLE, ST_PLAYING, ST_DYING, ST_DONE, ST_VICTORY, ST_SCORES, ST_EDIT, ST_DESIGN };
 
 // ---- Kinds of actor (anything in a level that isn't a map square)
 enum
@@ -178,7 +179,8 @@ typedef struct
     int         w, h;
     const char *rows;                   // w * h characters: '.' or a colour 0-F
 } SpriteArt;
-extern const SpriteArt spriteArt[NUM_SPRITES];
+extern const SpriteArt spriteArt[NUM_SPRITES];     // the standard pictures
+extern const char     *spriteIds[NUM_SPRITES];     // their names in sprites.txt
 extern const COLORREF  palette[16];
 
 // ---- levels.cpp
@@ -204,6 +206,18 @@ void  DrawEditor(void);
 const char *LevelProblem(const Level *l);
 BOOL  SaveLevels(void);
 int   ImportStandardLevels(void);
+
+// ---- designer.cpp: the pictures as they are now (-1 = see-through), which
+//      the designer changes, and sprites.txt
+extern signed char sprPix[NUM_SPRITES][32 * 32];
+void  LoadSprites(void);
+BOOL  SaveSprites(void);
+void  EnterDesigner(void);
+void  DesignKey(WPARAM key);
+void  DesignMouseDown(int x, int y, BOOL right);
+void  DesignMouseMove(int x, int y, WPARAM buttons);
+BOOL  DesignCanClose(void);
+void  DrawDesigner(void);
 
 // ---- checker.cpp
 extern BOOL checkDone, checkGood;

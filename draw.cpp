@@ -17,8 +17,6 @@ DWORD          pal32[16];
 
 HFONT          fontTiny, fontSmall, fontHud, fontBig, fontTitle;
 
-// Sprites unpacked into colour numbers (-1 = see-through), so drawing is quick
-static signed char sprPix[NUM_SPRITES][32 * 32];
 
 // Backdrops: one picture per theme, which repeats as the camera moves
 #define BACK_W 640
@@ -124,15 +122,6 @@ void SetupBackBuffer(HDC screenDC)
     for (int i = 0; i < 16; i++)
         pal32[i] = Rgb32(palette[i]);
 
-    for (int s = 0; s < NUM_SPRITES; s++)
-    {
-        const SpriteArt *a = &spriteArt[s];
-        for (int i = 0; i < a->w * a->h; i++)
-        {
-            char c = a->rows[i];
-            sprPix[s][i] = (c >= '0' && c <= '9') ? c - '0' : (c >= 'A' && c <= 'F') ? c - 'A' + 10 : -1;
-        }
-    }
     MakeBackdrops();
 }
 
@@ -235,7 +224,7 @@ void GfxBackdrop(int theme, int ox, int oy)
     {
         const DWORD *src = b + (y + oy) * BACK_W;
         DWORD *dst = pix + y * GAME_W;
-        for (int x = 0; x < GAME_W; x++)
+        for (int x = clipX0; x < clipX1; x++)
             dst[x] = src[(x + ox) % BACK_W];
     }
 }
@@ -552,7 +541,8 @@ static void DrawTitle(void)
     GfxCentre(fontSmall, 200, "Arrows: move     Space / Alt / Z: jump", RGB(200, 200, 220));
     GfxCentre(fontSmall, 220, "Ctrl / X: fire     Up: go through the exit", RGB(200, 200, 220));
     GfxCentre(fontSmall, 240, "P: pause   S: sound   M: music   F11: full screen", RGB(200, 200, 220));
-    GfxCentre(fontSmall, 260, "H: high scores   E: level editor   Esc: quit", RGB(200, 200, 220));
+    GfxCentre(fontSmall, 260, "H: high scores  E: level editor  C: character designer", RGB(200, 200, 220));
+    GfxCentre(fontSmall, 280, "Esc: quit", RGB(200, 200, 220));
     GfxCentre(fontSmall, 345, "Shoot crates open. Find the coloured keys. Reach the exit.", RGB(150, 150, 180));
     GfxCentre(fontSmall, 368, "Gamepad: A jump, X or B fire, Y pause, Start play", RGB(110, 110, 140));
 }
@@ -579,6 +569,8 @@ void Render(void)
 {
     if (state == ST_EDIT)
         DrawEditor();
+    else if (state == ST_DESIGN)
+        DrawDesigner();
     else if (state == ST_TITLE)
         DrawTitle();
     else if (state == ST_SCORES)

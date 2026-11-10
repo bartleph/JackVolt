@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=
-UnitCount=14
+UnitCount=15
 
 [Unit1]
 FileName=main.cpp
@@ -72,7 +72,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit5]
-FileName=checker.cpp
+FileName=designer.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -82,7 +82,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit6]
-FileName=levels.cpp
+FileName=checker.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -92,7 +92,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit7]
-FileName=defaults.cpp
+FileName=levels.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -102,7 +102,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit8]
-FileName=art.cpp
+FileName=defaults.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -112,7 +112,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit9]
-FileName=sound.cpp
+FileName=art.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -122,7 +122,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit10]
-FileName=pad.cpp
+FileName=sound.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -132,7 +132,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit11]
-FileName=scores.cpp
+FileName=pad.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -142,7 +142,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit12]
-FileName=inputbox.cpp
+FileName=scores.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -152,6 +152,16 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit13]
+FileName=inputbox.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit14]
 FileName=volt.h
 CompileCpp=1
 Folder=
@@ -161,7 +171,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit14]
+[Unit15]
 FileName=volt.rc
 CompileCpp=1
 Folder=

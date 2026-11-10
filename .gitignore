@@ -10,3 +10,4 @@ scores.txt
 gen/__pycache__/
 gen/*.png
 gen/levels_preview.txt
+sprites.txt

@@ -11,6 +11,19 @@ const COLORREF palette[16] =
     RGB(64, 200, 240), RGB(58, 100, 216), RGB(240, 112, 184), RGB(244, 196, 156),
 };
 
+// Their names in sprites.txt
+const char *spriteIds[NUM_SPRITES] =
+{
+    "STAND", "WALK1", "WALK2", "WALK3", "WALK4", "WALK5",
+    "WALK6", "JUMP", "WALKER1", "WALKER2", "HOPPER1", "HOPPER2",
+    "FLYER1", "FLYER2", "TURRET", "GEM", "COG", "BATTERY",
+    "MEDKIT", "POWER", "BOOTS", "KEY", "CRATE", "SPIKES",
+    "PIPE", "PIPEH", "LAMP", "DOOR", "WALL1", "GIRDER1",
+    "LEDGE1", "BRICK1", "WALL2", "GIRDER2", "LEDGE2", "BRICK2",
+    "WALL3", "GIRDER3", "LEDGE3", "BRICK3", "EXIT", "BOSS1",
+    "BOSS2",
+};
+
 const SpriteArt spriteArt[NUM_SPRITES] =
 {
     // STAND
