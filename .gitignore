@@ -1,0 +1,12 @@
+*.o
+*.exe
+*.res
+Makefile.win
+*_private.rc
+*_private.h
+*.layout
+levels.txt
+scores.txt
+gen/__pycache__/
+gen/*.png
+gen/levels_preview.txt

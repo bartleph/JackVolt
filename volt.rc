@@ -1,0 +1,34 @@
+// volt.rc - the program's icon and version information
+//
+// Dev-C++ compiles this with windres and builds it into Volt.exe.
+// The version information is what Windows shows under
+// Properties -> Details when you right-click the .exe.
+
+#include <windows.h>
+
+1 ICON "volt.ico"
+
+1 VERSIONINFO
+FILEVERSION     1,1,0,0
+PRODUCTVERSION  1,1,0,0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904B0"                // UK English, Unicode
+        BEGIN
+            VALUE "FileDescription",  "Jack Volt - a run-and-gun platform game"
+            VALUE "FileVersion",      "1.1.0.0"
+            VALUE "InternalName",     "Volt"
+            VALUE "OriginalFilename", "Volt.exe"
+            VALUE "ProductName",      "Jack Volt"
+            VALUE "ProductVersion",   "1.1"
+            VALUE "LegalCopyright",   "Written in Dev-C++"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0809, 1200
+    END
+END
