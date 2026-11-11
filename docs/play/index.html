@@ -86,6 +86,26 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 .tb.jump { border-color: rgba(64, 200, 240, 0.65); color: var(--cyan); }
 .tb.small { width: min(46px, 12vh); height: min(46px, 12vh); font-size: 9px; }
 .tb.on { background: rgba(248, 216, 56, 0.35); }
+/* Buttons for touch screens: the title's choices, and the editors' keys */
+.tools { position: absolute; z-index: 4; display: flex; gap: 5px; pointer-events: auto; }
+.tools[hidden] { display: none !important; }
+.row-tools { left: 50%; bottom: 6%; transform: translateX(-50%); flex-wrap: wrap; justify-content: center; width: min(92%, 640px); }
+.side { top: 6px; bottom: 6px; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 4px; width: var(--side, 120px); }
+.side.left { left: max(4px, env(safe-area-inset-left, 0px)); }
+.side.right { top: 42px; right: max(4px, env(safe-area-inset-right, 0px)); flex-wrap: wrap-reverse; }
+.eb {
+  font: 600 11px var(--ui); letter-spacing: 0.02em; color: var(--text); text-align: center;
+  background: rgba(22, 24, 48, 0.88); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0 6px; height: 27px; min-width: 56px; flex: 0 0 auto; touch-action: manipulation; line-height: 1;
+}
+.row-tools .eb { font-size: 14px; padding: 9px 14px; height: auto; }
+.eb.go { color: var(--night); background: var(--volt); border-color: var(--volt); }
+.eb.tool.on { border-color: var(--cyan); background: rgba(64, 200, 240, 0.25); }
+/* Tall (portrait) screens: the editors' buttons go in rows under the game */
+.portrait #stage { align-items: flex-start; padding-top: 4px; }
+.portrait .side { top: auto; bottom: 6px; width: auto; flex-direction: row; flex-wrap: wrap; left: 6px; right: 6px; }
+.portrait .side.left { bottom: 92px; }
+.portrait .side.right { justify-content: flex-start; }
 #tapHint { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); font: 700 15px var(--ui); letter-spacing: 0.08em; color: var(--volt); background: rgba(11, 12, 28, 0.7); padding: 8px 14px; border-radius: 6px; pointer-events: none; z-index: 4; }
 
 /* Messages, and the boxes for typing and for the panels */
@@ -124,7 +144,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   <div id="stage">
     <canvas id="screen" width="640" height="400" aria-label="Jack Volt game screen"></canvas>
     <div id="touch" hidden>
-      <div class="pad top-left"><div class="tb small" data-vk="80">PAUSE</div></div>
+      <div class="pad top-left"><div class="tb small" data-vk="80">PAUSE</div><div class="tb small" data-vk="27">QUIT</div></div>
       <div class="pad left">
         <div class="tb" data-vk="37">&#9664;</div>
         <div class="tb" data-vk="39">&#9654;</div>
@@ -135,7 +155,64 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
         <div class="tb jump" data-vk="32">JUMP</div>
       </div>
     </div>
-    <div id="tapHint" hidden>Tap the screen to play</div>
+    <div id="tapHint" hidden>Tap the screen to carry on</div>
+    <div id="titleTouch" class="tools row-tools" hidden>
+      <button type="button" class="eb go" data-keys="13">Play</button>
+      <button type="button" class="eb" data-keys="72">High scores</button>
+      <button type="button" class="eb" data-keys="69">Level editor</button>
+      <button type="button" class="eb" data-keys="67">Character designer</button>
+    </div>
+    <div id="editTouch" hidden>
+      <div class="tools side left">
+        <button type="button" class="eb" data-keys="27">Back</button>
+        <button type="button" class="eb go" data-keys="ctrl+83">Save</button>
+        <button type="button" class="eb tool" data-tool="paint">Paint</button>
+        <button type="button" class="eb tool" data-tool="erase">Rub out</button>
+        <button type="button" class="eb tool" data-tool="scroll">Scroll</button>
+        <button type="button" class="eb" data-keys="84">Test</button>
+        <button type="button" class="eb" data-keys="86">Check</button>
+        <button type="button" class="eb" data-keys="33">&#9664; Level</button>
+        <button type="button" class="eb" data-keys="34">Level &#9654;</button>
+        <button type="button" class="eb" data-keys="73">Add standard</button>
+      </div>
+      <div class="tools side right">
+        <button type="button" class="eb" data-keys="78">New level</button>
+        <button type="button" class="eb" data-keys="82">Rename</button>
+        <button type="button" class="eb" data-keys="46">Delete</button>
+        <button type="button" class="eb" data-keys="76">Tiles</button>
+        <button type="button" class="eb" data-keys="66">Backdrop</button>
+        <button type="button" class="eb" data-keys="85">Tune</button>
+        <button type="button" class="eb" data-keys="ctrl+39">Wider</button>
+        <button type="button" class="eb" data-keys="ctrl+37">Narrower</button>
+        <button type="button" class="eb" data-keys="ctrl+40">Taller</button>
+        <button type="button" class="eb" data-keys="ctrl+38">Shorter</button>
+      </div>
+    </div>
+    <div id="designTouch" hidden>
+      <div class="tools side left">
+        <button type="button" class="eb" data-keys="27">Back</button>
+        <button type="button" class="eb go" data-keys="ctrl+83">Save</button>
+        <button type="button" class="eb" data-keys="ctrl+90">Undo</button>
+        <button type="button" class="eb tool" data-tool="paint">Paint</button>
+        <button type="button" class="eb tool" data-tool="erase">Rub out</button>
+        <button type="button" class="eb tool" data-tool="fill">Fill</button>
+        <button type="button" class="eb tool" data-tool="pick">Pick colour</button>
+        <button type="button" class="eb" data-keys="33">&#9664; Picture</button>
+        <button type="button" class="eb" data-keys="34">Picture &#9654;</button>
+      </div>
+      <div class="tools side right">
+        <button type="button" class="eb" data-keys="72">Flip &#8596;</button>
+        <button type="button" class="eb" data-keys="86">Flip &#8597;</button>
+        <button type="button" class="eb" data-keys="37">Slide &#9664;</button>
+        <button type="button" class="eb" data-keys="39">Slide &#9654;</button>
+        <button type="button" class="eb" data-keys="38">Slide &#9650;</button>
+        <button type="button" class="eb" data-keys="40">Slide &#9660;</button>
+        <button type="button" class="eb" data-keys="ctrl+67">Copy</button>
+        <button type="button" class="eb" data-keys="ctrl+86">Paste</button>
+        <button type="button" class="eb" data-keys="46">Clear</button>
+        <button type="button" class="eb" data-keys="82">Standard</button>
+      </div>
+    </div>
     <div id="toast" hidden></div>
   </div>
 </div>
@@ -179,7 +256,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
       <dt>Esc</dt><dd>Give up, or leave an editor</dd>
       <dt>F11</dt><dd>Full screen</dd>
     </dl>
-    <p>On a phone or tablet, use the buttons on the screen and tap to play. A gamepad works too: A jumps, X or B fires, Start plays. The editors need a keyboard and mouse.</p>
+    <p>On a phone or tablet, use the buttons on the screen. The title has buttons for the high scores and both editors, and the editors have buttons for their keys: Rub out, Fill, Pick colour and Scroll change what a touch on the picture or the map does. A gamepad works too: A jumps, X or B fires, Start plays.</p>
     <div class="row"><button type="button" data-close>Back to the game</button></div>
   </div>
 </div>
@@ -276,6 +353,10 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
     canvas.style.width = Math.floor(w) + "px"; canvas.style.height = Math.floor(h) + "px";
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     scale = canvas.width / 640;
+    // The space either side of the game, for the editors' buttons
+    var side = Math.floor((stage.clientWidth - w) / 2) - 6;
+    stage.style.setProperty("--side", Math.max(60, side) + "px");
+    document.body.classList.toggle("portrait", side < 60);
   }
   window.addEventListener("resize", fit);
 
@@ -350,19 +431,43 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 
   // ---- The mouse (and a finger on the screen)
   function gameXY(e) { var r = canvas.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) * 640 / r.width), Math.floor((e.clientY - r.top) * 400 / r.height)]; }
+  var dragFrom = null;
   canvas.addEventListener("pointerdown", function (e) {
     if (!ex) return; startAudio(); e.preventDefault();
     var s = ex.web_state(), p = gameXY(e);
     if (s === ST.EDIT || s === ST.DESIGN) {
       try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      var mouse = e.pointerType === "mouse";
+      var t = mouse ? "paint" : tool;
+      if (t === "scroll") { dragFrom = p; return; }
+      if (t === "fill") key(16, true);                     // Shift+click fills
+      if (t === "pick") key(17, true);                     // Ctrl+click picks up a colour
       ex.web_mouse_move(p[0], p[1], 0);
-      ex.web_mouse_down(p[0], p[1], e.button === 2 ? 1 : 0);
-    } else if (e.pointerType !== "mouse" || s !== ST.PLAYING) {
-      if (s !== ST.PLAYING) { key(13, true); key(13, false); }    // a tap (or click) carries on, like Enter
+      ex.web_mouse_down(p[0], p[1], (e.button === 2 || t === "erase") ? 1 : 0);
+      if (t === "fill") key(16, false);
+      if (t === "pick") key(17, false);
+    } else if (s !== ST.PLAYING) {
+      key(13, true); key(13, false);                       // a tap (or click) carries on, like Enter
     }
   });
-  canvas.addEventListener("pointermove", function (e) { if (!ex) return; var p = gameXY(e); ex.web_mouse_move(p[0], p[1], e.buttons & 3); });
-  canvas.addEventListener("pointerup", function () { if (ex) ex.web_mouse_up(); });
+  canvas.addEventListener("pointermove", function (e) {
+    if (!ex) return;
+    var p = gameXY(e);
+    if (dragFrom) {                                        // Scroll: drag the map, a square at a time
+      var dx = p[0] - dragFrom[0], dy = p[1] - dragFrom[1];
+      while (dx >= 32)  { pressKeys(37); dx -= 32; dragFrom[0] += 32; }
+      while (dx <= -32) { pressKeys(39); dx += 32; dragFrom[0] -= 32; }
+      while (dy >= 32)  { pressKeys(38); dy -= 32; dragFrom[1] += 32; }
+      while (dy <= -32) { pressKeys(40); dy += 32; dragFrom[1] -= 32; }
+      return;
+    }
+    var btn = e.buttons & 3;
+    if (btn && e.pointerType !== "mouse" && tool === "erase") btn = 2;
+    if (btn && e.pointerType !== "mouse" && (tool === "fill" || tool === "pick")) btn = 0;
+    ex.web_mouse_move(p[0], p[1], btn);
+  });
+  canvas.addEventListener("pointerup", function () { dragFrom = null; if (ex) ex.web_mouse_up(); });
+  canvas.addEventListener("pointercancel", function () { dragFrom = null; if (ex) ex.web_mouse_up(); });
   canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   canvas.addEventListener("wheel", function (e) { if (!ex) return; e.preventDefault(); ex.web_wheel(e.deltaY > 0 ? -120 : 120, e.shiftKey ? 1 : 0); }, { passive: false });
 
@@ -381,6 +486,28 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   touchEl.addEventListener("pointermove", function (e) { if (e.pointerId in fingers) { fingers[e.pointerId] = buttonAt(e.clientX, e.clientY); updateFingers(); } });
   function lift(e) { delete fingers[e.pointerId]; updateFingers(); }
   touchEl.addEventListener("pointerup", lift); touchEl.addEventListener("pointercancel", lift);
+
+  // ---- Buttons for touch screens: each presses a key (or Ctrl and a key)
+  function pressKeys(spec) {
+    var parts = String(spec).split("+"), vk = +parts[parts.length - 1], ctrl = parts[0] === "ctrl";
+    startAudio();
+    if (ctrl) key(17, true);
+    key(vk, true); key(vk, false);
+    if (ctrl) key(17, false);
+  }
+  var ebs = document.querySelectorAll(".eb[data-keys]");
+  for (var b = 0; b < ebs.length; b++) ebs[b].addEventListener("click", function (e) { pressKeys(e.currentTarget.dataset.keys); });
+
+  // The editors' tools stand in for the mouse buttons and Shift and Ctrl
+  var tool = "paint";
+  function setTool(t) {
+    tool = t;
+    var all = document.querySelectorAll(".eb.tool");
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle("on", all[i].dataset.tool === t);
+  }
+  var tbs = document.querySelectorAll(".eb.tool");
+  for (b = 0; b < tbs.length; b++) tbs[b].addEventListener("click", function (e) { setTool(e.currentTarget.dataset.tool); });
+  setTool("paint");
 
   // ---- Gamepads, in the same form as the Windows version's XInput
   function pollPad() {
@@ -489,6 +616,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
     ex = result.instance.exports;
     if (ex._initialize) ex._initialize();
     ex.web_init((Math.random() * 1e9) | 0);
+    window.jackVoltState = function () { return ex.web_state(); };   // handy for testing
     fit(); canvas.tabIndex = 0;
     var last = performance.now(), acc = 0, shown = -1;
     function frame(now) {
@@ -500,7 +628,11 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
         var s = ex.web_state();
         if (isTouch && shown !== s) {
           touchEl.hidden = !(s === ST.PLAYING || s === ST.DYING || s === ST.DONE);
-          document.getElementById("tapHint").hidden = !(s === ST.TITLE || s === ST.SCORES || s === ST.VICTORY);
+          document.getElementById("tapHint").hidden = s !== ST.VICTORY;
+          document.getElementById("titleTouch").hidden = !(s === ST.TITLE || s === ST.SCORES);
+          document.getElementById("editTouch").hidden = s !== ST.EDIT;
+          document.getElementById("designTouch").hidden = s !== ST.DESIGN;
+          if (s === ST.EDIT || s === ST.DESIGN) setTool("paint");
           shown = s; if (touchEl.hidden) { fingers = {}; updateFingers(); }
         }
         requestAnimationFrame(frame);

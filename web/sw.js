@@ -1,6 +1,6 @@
 // Keeps Jack Volt's files so the installed app works without the internet.
 // Change the version when the game changes, so phones pick up the new one.
-var CACHE = "jackvolt-1.3";
+var CACHE = "jackvolt-1.3.1";
 var FILES = ["./", "index.html", "volt.wasm", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function (e) {
